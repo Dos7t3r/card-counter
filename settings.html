@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏设置 - 抽卡游戏记录系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        /* 毛玻璃效果 */
+        .glass {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .title {
+            color: white;
+            font-size: 24px;
+            font-weight: 300;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .settings-section {
+            border-radius: 25px;
+            padding: 30px;
+        }
+
+        .section-title {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 20px;
+            font-weight: 300;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        /* 路径配置 */
+        .path-config {
+            margin-bottom: 30px;
+        }
+
+        .dice-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .dice-tab {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .dice-tab.active {
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+        }
+
+        .dice-tab:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .grid-preview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .grid-cell {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .grid-cell:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        .grid-cell.selected {
+            background: rgba(255, 215, 0, 0.8);
+            border-color: rgba(255, 215, 0, 1);
+            color: #333;
+            transform: scale(1.1);
+        }
+
+        .path-description {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            margin: 15px 0;
+            font-size: 14px;
+        }
+
+        /* 计分规则配置 */
+        .scoring-config {
+            display: grid;
+            gap: 20px;
+        }
+
+        .rule-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        .rule-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .rule-input {
+            width: 80px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .rule-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        /* 预览区域 */
+        .preview-section {
+            grid-column: 1 / -1;
+            border-radius: 25px;
+            padding: 30px;
+            margin-top: 20px;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+
+        .preview-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .preview-card:hover {
+            transform: scale(1.02);
+        }
+
+        .preview-card.path-highlight {
+            background: rgba(255, 215, 0, 0.9);
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .card-symbol {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .card-score {
+            font-size: 14px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .calculation-preview {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            backdrop-filter: blur(5px);
+        }
+
+        .calculation-preview h4 {
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .formula-display {
+            font-family: 'Courier New', monospace;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 18px;
+            color: #667eea;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .step-by-step {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .calculation-step {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .step-card {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .step-score {
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        .step-score.negative {
+            color: #e74c3c;
+        }
+
+        /* 控制按钮 */
+        .controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-primary {
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        /* 通知系统 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 15px;
+            color: white;
+            font-weight: 500;
+            z-index: 10000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            max-width: 350px;
+            word-wrap: break-word;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: rgba(39, 174, 96, 0.9);
+        }
+
+        .notification.error {
+            background: rgba(231, 76, 60, 0.9);
+        }
+
+        .notification.info {
+            background: rgba(102, 126, 234, 0.9);
+        }
+
+        .notification.warning {
+            background: rgba(243, 156, 18, 0.9);
+        }
+
+        /* 导入导出 */
+        .file-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-label:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* 保存提示栏 */
+        .save-prompt {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 20px 30px;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.15);
+            transition: bottom 0.3s ease;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .save-prompt.show {
+            bottom: 0;
+        }
+
+        .save-prompt-text {
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .save-prompt-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .save-prompt .btn {
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .settings-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .dice-tabs {
+                justify-content: center;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .file-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .save-prompt {
+                left: 20px;
+                right: 20px;
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header glass">
+            <a href="#" class="back-btn" onclick="checkUnsavedChanges()">
+                ← 返回游戏
+            </a>
+            <h1 class="title">游戏设置</h1>
+            <div></div>
+        </div>
+
+        <div class="settings-grid">
+            <!-- 路径配置 -->
+            <div class="settings-section glass">
+                <h2 class="section-title">骰子点数路径配置</h2>
+                
+                <div class="path-config">
+                    <div class="dice-tabs">
+                        <button class="dice-tab active" onclick="selectDice(1)">1点</button>
+                        <button class="dice-tab" onclick="selectDice(2)">2点</button>
+                        <button class="dice-tab" onclick="selectDice(3)">3点</button>
+                        <button class="dice-tab" onclick="selectDice(4)">4点</button>
+                        <button class="dice-tab" onclick="selectDice(5)">5点</button>
+                        <button class="dice-tab" onclick="selectDice(6)">6点</button>
+                    </div>
+                    
+                    <div class="path-description" id="pathDescription">
+                        点击网格选择路径 (当前: 1点)
+                    </div>
+                    
+                    <div style="text-align: center; color: rgba(255, 255, 255, 0.8); margin: 10px 0; font-size: 12px; font-style: italic;">
+                        点击网格单元格来添加/移除路径位置
+                    </div>
+                    
+                    <div class="grid-preview" id="gridPreview">
+                        <!-- 网格将通过JavaScript生成 -->
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 15px;">
+                        <button class="btn btn-secondary" onclick="clearPath()">清空当前路径</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 计分规则配置 -->
+            <div class="settings-section glass">
+                <h2 class="section-title">计分规则配置</h2>
+                
+                <div class="scoring-config">
+                    <div class="rule-item">
+                        <span class="rule-label">入场费 ($)</span>
+                        <input type="number" class="rule-input" id="entryFee" value="20" min="0">
+                    </div>
+
+                    <div class="rule-item">
+                        <span class="rule-label">0-10分奖金 ($)</span>
+                        <input type="number" class="rule-input" id="bonus0_10" value="0" min="0" readonly>
+                    </div>
+
+                    <div class="rule-item">
+                        <span class="rule-label">11-20分奖金 ($)</span>
+                        <input type="number" class="rule-input" id="bonus11_20" value="5" min="0">
+                    </div>
+
+                    <div class="rule-item">
+                        <span class="rule-label">21-40分奖金 ($)</span>
+                        <input type="number" class="rule-input" id="bonus21_40" value="20" min="0">
+                    </div>
+
+                    <div class="rule-item">
+                        <span class="rule-label">41-50分奖金 ($)</span>
+                        <input type="number" class="rule-input" id="bonus41_50" value="50" min="0">
+                    </div>
+
+                    <div class="rule-item">
+                        <span class="rule-label">51-70分奖金 ($)</span>
+                        <input type="number" class="rule-input" id="bonus51_70" value="100" min="0">
+                    </div>
+
+                    <div class="rule-item">
+                        <span class="rule-label">71分以上奖金 ($)</span>
+                        <input type="number" class="rule-input" id="bonus71plus" value="200" min="0">
+                    </div>
+
+                    <div class="rule-item">
+                        <span class="rule-label">动画时长 (毫秒)</span>
+                        <input type="number" class="rule-input" id="animationDuration" value="1000" min="500" max="3000" step="100">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 预览区域 -->
+        <div class="preview-section glass">
+            <h2 class="section-title">实时预览</h2>
+            
+            <div style="text-align: center; margin-bottom: 20px;">
+                <label style="color: rgba(255, 255, 255, 0.9); margin-right: 15px;">选择骰子点数预览:</label>
+                <select id="previewDice" onchange="updatePreview()" style="padding: 8px 12px; border-radius: 8px; border: none; background: rgba(255, 255, 255, 0.9);">
+                    <option value="1">1点</option>
+                    <option value="2">2点</option>
+                    <option value="3">3点</option>
+                    <option value="4">4点</option>
+                    <option value="5">5点</option>
+                    <option value="6">6点</option>
+                </select>
+            </div>
+            
+            <div class="preview-grid" id="previewGrid">
+                <!-- 预览网格将通过JavaScript生成 -->
+            </div>
+            
+            <div class="calculation-preview" id="calculationPreview">
+                <h4>计算过程预览</h4>
+                <div class="formula-display" id="formulaDisplay">选择骰子点数查看计算</div>
+                <div class="step-by-step" id="stepByStep">
+                    <!-- 计算步骤将在这里显示 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 控制按钮 -->
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="resetToDefault()">恢复默认设置</button>
+            <button class="btn btn-primary" onclick="saveSettings()">保存设置</button>
+        </div>
+
+        <!-- 导入导出配置 -->
+        <div class="file-actions">
+            <label for="importConfig" class="file-label">
+                📁 导入配置
+            </label>
+            <input type="file" id="importConfig" class="file-input" accept=".json" onchange="importConfig(this)">
+            
+            <button class="file-label" onclick="exportConfig()">
+                💾 导出配置
+            </button>
+        </div>
+    </div>
+
+    <!-- 保存提示栏 -->
+    <div class="save-prompt" id="savePrompt">
+        <div class="save-prompt-text">您有未保存的更改</div>
+        <div class="save-prompt-buttons">
+            <button class="btn btn-secondary" onclick="hideSavePrompt()">忽略</button>
+            <button class="btn btn-primary" onclick="saveAndContinue()">保存</button>
+        </div>
+    </div>
+
+    <script>
+        // 配置数据
+        let pathConfig = {
+            1: [0, 1, 2], // 第一行
+            2: [3, 4, 5], // 第二行
+            3: [6, 7, 8], // 第三行
+            4: [0, 3, 6], // 第一列
+            5: [1, 4, 7], // 第二列
+            6: [2, 5, 8]  // 第三列
+        };
+
+        let scoringRules = {
+            entry_fee: 20,
+            bonus_rules: {
+                '0-10': 0,
+                '11-20': 5,
+                '21-40': 20,
+                '41-50': 50,
+                '51-70': 100,
+                '71+': 200
+            }
+        };
+
+        // 添加动画设置变量
+        let animationDuration = 1000;
+
+        let currentDice = 1;
+        let hasUnsavedChanges = false;
+        let originalConfig = null;
+
+        // 示例卡牌数据用于预览
+        const sampleCards = [
+            { suit: '♥', rank: 'A' },   // 位置1
+            { suit: '♠', rank: 'K' },   // 位置2
+            { suit: '♦', rank: '7' },   // 位置3
+            { suit: '♣', rank: 'Q' },   // 位置4
+            { suit: '♥', rank: '5' },   // 位置5
+            { suit: '♠', rank: 'A' },   // 位置6
+            { suit: '♦', rank: 'J' },   // 位置7
+            { suit: '♣', rank: '3' },   // 位置8
+            { suit: '♥', rank: '9' }    // 位置9
+        ];
+
+        // 通知系统
+        function showNotification(message, type = 'info', duration = 3000) {
+            // 先移除所有现有通知
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notification => {
+                if (document.body.contains(notification)) {
+                    document.body.removeChild(notification);
+                }
+            });
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // 显示动画
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            // 自动隐藏
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, duration);
+        }
+
+        // 检查配置是否有变化
+        function checkForChanges() {
+            if (!originalConfig) return false;
+            
+            const currentConfig = {
+                paths: pathConfig,
+                scoring_rules: {
+                    entry_fee: parseInt(document.getElementById('entryFee').value) || 20,
+                    bonus_rules: {
+                        '0-10': parseInt(document.getElementById('bonus0_10').value) || 0,
+                        '11-20': parseInt(document.getElementById('bonus11_20').value) || 5,
+                        '21-40': parseInt(document.getElementById('bonus21_40').value) || 20,
+                        '41-50': parseInt(document.getElementById('bonus41_50').value) || 50,
+                        '51-70': parseInt(document.getElementById('bonus51_70').value) || 100,
+                        '71+': parseInt(document.getElementById('bonus71plus').value) || 200
+                    },
+                    animation_duration: parseInt(document.getElementById('animationDuration').value) || 1000
+                }
+            };
+            
+            return JSON.stringify(currentConfig) !== JSON.stringify(originalConfig);
+        }
+
+        // 更新未保存状态
+        function updateUnsavedStatus() {
+            const hasChanges = checkForChanges();
+            if (hasChanges !== hasUnsavedChanges) {
+                hasUnsavedChanges = hasChanges;
+                if (hasUnsavedChanges) {
+                    showSavePrompt();
+                } else {
+                    hideSavePrompt();
+                }
+            }
+        }
+
+        // 显示保存提示
+        function showSavePrompt() {
+            document.getElementById('savePrompt').classList.add('show');
+        }
+
+        // 隐藏保存提示
+        function hideSavePrompt() {
+            document.getElementById('savePrompt').classList.remove('show');
+            hasUnsavedChanges = false;
+        }
+
+        // 保存并继续
+        function saveAndContinue() {
+            saveSettings();
+            hideSavePrompt();
+        }
+
+        // 检查未保存的更改
+        function checkUnsavedChanges() {
+            if (hasUnsavedChanges) {
+                if (confirm('您有未保存的更改，是否要保存？')) {
+                    saveSettings();
+                }
+            }
+            window.location.href = 'index.html';
+        }
+
+        // 初始化
+        function init() {
+            loadSettings();
+            createGrid();
+            createPreviewGrid();
+            updateScoringInputs();
+            updatePreview();
+            showNotification('设置页面已加载', 'success');
+            
+            // 保存原始配置用于比较
+            originalConfig = {
+                paths: JSON.parse(JSON.stringify(pathConfig)),
+                scoring_rules: JSON.parse(JSON.stringify(scoringRules)),
+                animation_duration: animationDuration
+            };
+        }
+
+        // 从服务器加载设置
+        async function loadSettings() {
+            try {
+                const response = await fetch('load_settings.php');
+                if (response.ok) {
+                    const settings = await response.json();
+                    
+                    // 设置入场费
+                    if (settings.entry_fee) {
+                        scoringRules.entry_fee = settings.entry_fee;
+                    }
+                    
+                    // 设置奖金规则
+                    if (settings.bonus_rules) {
+                        scoringRules.bonus_rules = settings.bonus_rules;
+                    }
+                    
+                    // 设置路径配置
+                    if (settings.paths) {
+                        pathConfig = settings.paths;
+                    }
+                    
+                    // 设置动画时长
+                    if (settings.animation_duration) {
+                        animationDuration = settings.animation_duration;
+                    }
+                    
+                    // 更新界面显示
+                    updateScoringInputs();
+                    updateGridDisplay();
+                    updatePreview();
+                    
+                    showNotification('设置已加载', 'success');
+                } else {
+                    throw new Error('加载失败');
+                }
+            } catch (error) {
+                console.error('加载设置失败:', error);
+                showNotification('加载设置失败: ' + error.message, 'error');
+            }
+        }
+
+        // 保存设置到服务器
+        async function saveSettings() {
+            try {
+                const settings = {
+                    entry_fee: parseInt(document.getElementById('entryFee').value) || 20,
+                    bonus_rules: {
+                        '0-10': parseInt(document.getElementById('bonus0_10').value) || 0,
+                        '11-20': parseInt(document.getElementById('bonus11_20').value) || 5,
+                        '21-40': parseInt(document.getElementById('bonus21_40').value) || 20,
+                        '41-50': parseInt(document.getElementById('bonus41_50').value) || 50,
+                        '51-70': parseInt(document.getElementById('bonus51_70').value) || 100,
+                        '71+': parseInt(document.getElementById('bonus71plus').value) || 200
+                    },
+                    paths: pathConfig,
+                    animation_duration: parseInt(document.getElementById('animationDuration').value) || 1000
+                };
+
+                const response = await fetch('save_settings.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                if (response.ok) {
+                    // 更新本地配置
+                    scoringRules.entry_fee = settings.entry_fee;
+                    scoringRules.bonus_rules = settings.bonus_rules;
+                    animationDuration = settings.animation_duration;
+                    
+                    showNotification('设置已保存', 'success');
+                    hasUnsavedChanges = false;
+                } else {
+                    throw new Error('保存失败');
+                }
+            } catch (error) {
+                console.error('保存设置失败:', error);
+                showNotification('保存设置失败: ' + error.message, 'error');
+            }
+        }
+
+        // 下载配置文件
+        function downloadConfigFile(config) {
+            const configJson = JSON.stringify(config, null, 2);
+            const blob = new Blob([configJson], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `game_config_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 创建配置网格
+        function createGrid() {
+            const grid = document.getElementById('gridPreview');
+            grid.innerHTML = '';
+            
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                cell.textContent = i + 1;
+                cell.onclick = () => toggleCell(i);
+                
+                // 添加鼠标悬停效果
+                cell.onmouseenter = () => {
+                    if (!cell.classList.contains('selected')) {
+                        cell.style.background = 'rgba(102, 126, 234, 0.6)';
+                    }
+                };
+                cell.onmouseleave = () => {
+                    if (!cell.classList.contains('selected')) {
+                        cell.style.background = '';
+                    }
+                };
+                
+                grid.appendChild(cell);
+            }
+            
+            updateGridDisplay();
+        }
+
+        // 创建预览网格
+        function createPreviewGrid() {
+            const grid = document.getElementById('previewGrid');
+            grid.innerHTML = '';
+            
+            for (let i = 0; i < 9; i++) {
+                const card = sampleCards[i];
+                const cell = document.createElement('div');
+                cell.className = 'preview-card';
+                cell.innerHTML = `
+                    <div class="card-symbol">${card.suit}${card.rank}</div>
+                    <div class="card-score" id="previewScore${i}">0分</div>
+                `;
+                
+                grid.appendChild(cell);
+            }
+        }
+
+        // 选择骰子
+        function selectDice(dice) {
+            currentDice = dice;
+            
+            // 更新标签页状态
+            document.querySelectorAll('.dice-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.dice-tab')[dice - 1].classList.add('active');
+            
+            // 更新描述
+            const descriptions = {
+                1: '第一行 (位置1-2-3)',
+                2: '第二行 (位置4-5-6)',
+                3: '第三行 (位置7-8-9)',
+                4: '第一列 (位置1-4-7)',
+                5: '第二列 (位置2-5-8)',
+                6: '第三列 (位置3-6-9)'
+            };
+            
+            document.getElementById('pathDescription').textContent = 
+                `点击网格选择路径 (当前: ${dice}点 - ${descriptions[dice]})`;
+            
+            updateGridDisplay();
+            showNotification(`已选择 ${dice}点 配置`, 'info');
+        }
+
+        // 切换网格单元格
+        function toggleCell(index) {
+            const currentPath = pathConfig[currentDice];
+            const cellIndex = currentPath.indexOf(index);
+            
+            if (cellIndex > -1) {
+                // 如果已选中，则移除
+                currentPath.splice(cellIndex, 1);
+                showNotification(`已从路径中移除位置${index + 1}`, 'info');
+            } else {
+                // 如果未选中，则添加
+                currentPath.push(index);
+                showNotification(`已添加位置${index + 1}到路径`, 'success');
+            }
+            
+            updateGridDisplay();
+            updatePreview();
+            updateUnsavedStatus();
+        }
+
+        // 更新网格显示
+        function updateGridDisplay() {
+            const cells = document.querySelectorAll('#gridPreview .grid-cell');
+            const currentPath = pathConfig[currentDice];
+            
+            cells.forEach((cell, index) => {
+                cell.classList.remove('selected');
+                cell.style.background = '';
+                
+                if (currentPath.includes(index)) {
+                    cell.classList.add('selected');
+                }
+            });
+        }
+
+        // 清空当前路径
+        function clearPath() {
+            pathConfig[currentDice] = [];
+            updateGridDisplay();
+            updatePreview();
+            updateUnsavedStatus();
+            showNotification(`已清空${currentDice}点的路径配置`, 'warning');
+        }
+
+        // 更新计分规则输入框
+        function updateScoringInputs() {
+            document.getElementById('entryFee').value = scoringRules.entry_fee;
+            document.getElementById('bonus0_10').value = scoringRules.bonus_rules['0-10'];
+            document.getElementById('bonus11_20').value = scoringRules.bonus_rules['11-20'];
+            document.getElementById('bonus21_40').value = scoringRules.bonus_rules['21-40'];
+            document.getElementById('bonus41_50').value = scoringRules.bonus_rules['41-50'];
+            document.getElementById('bonus51_70').value = scoringRules.bonus_rules['51-70'];
+            document.getElementById('bonus71plus').value = scoringRules.bonus_rules['71+'];
+            document.getElementById('animationDuration').value = animationDuration;
+        }
+
+        // 更新预览
+        function updatePreview() {
+            const selectedDice = parseInt(document.getElementById('previewDice').value);
+            const path = pathConfig[selectedDice];
+            
+            // 更新临时计分规则
+            const tempRules = {
+                entry_fee: parseInt(document.getElementById('entryFee').value) || 20,
+                bonus_rules: {
+                    '0-10': parseInt(document.getElementById('bonus0_10').value) || 0,
+                    '11-20': parseInt(document.getElementById('bonus11_20').value) || 5,
+                    '21-40': parseInt(document.getElementById('bonus21_40').value) || 20,
+                    '41-50': parseInt(document.getElementById('bonus41_50').value) || 50,
+                    '51-70': parseInt(document.getElementById('bonus51_70').value) || 100,
+                    '71+': parseInt(document.getElementById('bonus71plus').value) || 200
+                },
+                animation_duration: parseInt(document.getElementById('animationDuration').value) || 1000
+            };
+            
+            // 清除之前的高亮
+            document.querySelectorAll('.preview-card').forEach(card => {
+                card.classList.remove('path-highlight');
+            });
+            
+            let totalScore = 0;
+            let formula = [];
+            let steps = [];
+            
+            // 高亮路径并计算得分
+            path.forEach(index => {
+                const card = sampleCards[index];
+                const cardElement = document.querySelectorAll('.preview-card')[index];
+                cardElement.classList.add('path-highlight');
+                
+                // 计算卡牌得分
+                const isRed = card.suit === '♥' || card.suit === '♦';
+                const isAce = card.rank === 'A';
+                const isFaceCard = ['J', 'Q', 'K'].includes(card.rank);
+                
+                let cardScore = 0;
+                let reason = '';
+                
+                if (isFaceCard) {
+                    cardScore = tempRules.bonus_rules['71+'];
+                    reason = '面牌';
+                } else if (isAce) {
+                    cardScore = isRed ? tempRules.bonus_rules['71+'] : tempRules.bonus_rules['71+'];
+                    reason = isRed ? '红A' : '黑A';
+                } else {
+                    cardScore = isRed ? tempRules.bonus_rules['71+'] : tempRules.bonus_rules['71+'];
+                    reason = isRed ? '红牌' : '黑牌';
+                }
+                
+                totalScore += cardScore;
+                formula.push(cardScore > 0 ? `+${cardScore}` : `${cardScore}`);
+                
+                steps.push({
+                    position: `位置${Math.floor(index/3)+1}-${(index%3)+1}`,
+                    card: `${card.suit}${card.rank}`,
+                    score: cardScore,
+                    reason: reason
+                });
+                
+                // 更新卡牌得分显示
+                const scoreElement = document.getElementById(`previewScore${index}`);
+                scoreElement.textContent = `${cardScore > 0 ? '+' : ''}${cardScore}分`;
+                scoreElement.className = `card-score ${cardScore < 0 ? 'negative' : ''}`;
+            });
+            
+            // 更新公式显示
+            const formulaText = formula.length > 0 ? formula.join(' ') + ` = ${totalScore}` : '无路径选择';
+            document.getElementById('formulaDisplay').textContent = formulaText;
+            
+            // 更新步骤显示
+            const stepContainer = document.getElementById('stepByStep');
+            stepContainer.innerHTML = steps.map(step => `
+                <div class="calculation-step">
+                    <span><strong>${step.position}</strong>: <span class="step-card">${step.card}</span> (${step.reason})</span>
+                    <span class="step-score ${step.score < 0 ? 'negative' : ''}">${step.score > 0 ? '+' : ''}${step.score}分</span>
+                </div>
+            `).join('');
+            
+            // 如果没有路径，显示提示
+            if (steps.length === 0) {
+                stepContainer.innerHTML = '<div style="text-align: center; color: rgba(255, 255, 255, 0.7); padding: 20px;">该骰子点数暂无配置路径</div>';
+            }
+        }
+
+        // 恢复默认设置
+        function resetToDefault() {
+            if (confirm('确定要恢复默认设置吗？这将清除所有自定义配置。')) {
+                pathConfig = {
+                    1: [0, 1, 2], // 第一行
+                    2: [3, 4, 5], // 第二行
+                    3: [6, 7, 8], // 第三行
+                    4: [0, 3, 6], // 第一列
+                    5: [1, 4, 7], // 第二列
+                    6: [2, 5, 8]  // 第三列
+                };
+                
+                scoringRules = {
+                    entry_fee: 20,
+                    bonus_rules: {
+                        '0-10': 0,
+                        '11-20': 5,
+                        '21-40': 20,
+                        '41-50': 50,
+                        '51-70': 100,
+                        '71+': 200
+                    }
+                };
+                
+                animationDuration = 1000;
+                
+                updateGridDisplay();
+                updateScoringInputs();
+                updatePreview();
+                updateUnsavedStatus();
+                
+                showNotification('已恢复默认设置', 'success');
+            }
+        }
+
+        // 导出配置
+        function exportConfig() {
+            const config = {
+                paths: pathConfig,
+                scoring_rules: scoringRules,
+                export_time: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const configJson = JSON.stringify(config, null, 2);
+            const blob = new Blob([configJson], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `game_config_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification('配置已导出', 'success');
+        }
+
+        // 导入配置
+        function importConfig(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const config = JSON.parse(e.target.result);
+                    
+                    if (config.paths) {
+                        pathConfig = config.paths;
+                    }
+                    
+                    if (config.scoring_rules) {
+                        scoringRules = config.scoring_rules;
+                    }
+                    
+                    updateGridDisplay();
+                    updateScoringInputs();
+                    updatePreview();
+                    updateUnsavedStatus();
+                    
+                    showNotification('配置导入成功', 'success');
+                    
+                } catch (error) {
+                    console.error('导入失败:', error);
+                    showNotification('导入失败: 配置文件格式错误', 'error');
+                }
+            };
+            reader.readAsText(file);
+            
+            // 重置文件输入
+            input.value = '';
+        }
+
+        // 监听计分规则输入变化
+        document.addEventListener('input', function(e) {
+            // 在监听输入变化中添加动画设置
+            if (e.target.classList.contains('rule-input') || e.target.id === 'animationDuration') {
+                updatePreview();
+                updateUnsavedStatus();
+            }
+        });
+
+        // 监听页面关闭事件
+        window.addEventListener('beforeunload', function(e) {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '您有未保存的更改，确定要离开吗？';
+                return e.returnValue;
+            }
+        });
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

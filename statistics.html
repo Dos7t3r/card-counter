@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据统计 - 抽卡游戏记录系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        /* 毛玻璃效果 */
+        .glass {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .title {
+            color: white;
+            font-size: 24px;
+            font-weight: 300;
+        }
+
+        .section {
+            border-radius: 25px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 20px;
+            font-weight: 300;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        /* 图表区域 */
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+        }
+
+        .chart-title {
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* 数据表格 */
+        .data-table-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 20px;
+            overflow-x: auto;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table th {
+            background-color: #f8f9fa;
+            color: #667eea;
+            font-weight: 500;
+            position: sticky;
+            top: 0;
+        }
+
+        .data-table tr:hover {
+            background-color: #f1f5ff;
+        }
+
+        .data-table .profit {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .data-table .loss {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        /* 控制按钮 */
+        .controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-primary {
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        /* 统计卡片 */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 300;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .stat-trend {
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .trend-up {
+            color: #27ae60;
+        }
+
+        .trend-down {
+            color: #e74c3c;
+        }
+
+        /* 通知系统 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 15px;
+            color: white;
+            font-weight: 500;
+            z-index: 10000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            max-width: 350px;
+            word-wrap: break-word;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: rgba(39, 174, 96, 0.9);
+        }
+
+        .notification.error {
+            background: rgba(231, 76, 60, 0.9);
+        }
+
+        .notification.info {
+            background: rgba(102, 126, 234, 0.9);
+        }
+
+        .notification.warning {
+            background: rgba(243, 156, 18, 0.9);
+        }
+
+        /* 过滤器 */
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-label {
+            color: white;
+            font-weight: 500;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            outline: none;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* 添加图表相关样式 */
+        .chart-section {
+            border-radius: 25px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            margin: 20px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header glass">
+            <a href="index.html" class="back-btn">
+                ← 返回游戏
+            </a>
+            <h1 class="title">数据统计</h1>
+            <div></div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <div class="stat-label">总游戏次数</div>
+                <div class="stat-value" id="totalGames">0</div>
+                <div class="stat-trend trend-up" id="gamesTrend">+0% 本周</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">平均得分</div>
+                <div class="stat-value" id="avgScore">0</div>
+                <div class="stat-trend trend-up" id="scoreTrend">+0% 本周</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">盈利次数</div>
+                <div class="stat-value" id="profitGames">0</div>
+                <div class="stat-trend" id="profitTrend">0%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">总盈亏</div>
+                <div class="stat-value" id="totalProfit">0</div>
+                <div class="stat-trend" id="profitValueTrend">+0</div>
+            </div>
+        </div>
+
+        <!-- 图表区域 -->
+        <div class="section glass">
+            <h2 class="section-title">数据图表</h2>
+            
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3 class="chart-title">盈亏比例</h3>
+                    <div class="chart-container">
+                        <canvas id="profitPieChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">最近游戏盈亏趋势</h3>
+                    <div class="chart-container">
+                        <canvas id="profitLineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3 class="chart-title">骰子点数分布</h3>
+                    <div class="chart-container">
+                        <canvas id="diceBarChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">玩家得分分布</h3>
+                    <div class="chart-container">
+                        <canvas id="scoreDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 历史记录表格 -->
+        <div class="section glass">
+            <h2 class="section-title">历史记录</h2>
+            
+            <div class="filters">
+                <div class="filter-group">
+                    <label class="filter-label">玩家:</label>
+                    <select id="playerFilter" class="filter-select">
+                        <option value="all">全部</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">盈亏:</label>
+                    <select id="profitFilter" class="filter-select">
+                        <option value="all">全部</option>
+                        <option value="profit">盈利</option>
+                        <option value="loss">亏损</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">排序:</label>
+                    <select id="sortFilter" class="filter-select">
+                        <option value="time-desc">时间 (最新)</option>
+                        <option value="time-asc">时间 (最早)</option>
+                        <option value="score-desc">得分 (高到低)</option>
+                        <option value="score-asc">得分 (低到高)</option>
+                        <option value="bonus-desc">奖金 (高到低)</option>
+                        <option value="bonus-asc">奖金 (低到高)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <button class="btn btn-secondary" onclick="applyFilters()">应用筛选</button>
+                </div>
+            </div>
+            
+            <div class="data-table-container">
+                <table class="data-table" id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>玩家名称</th>
+                            <th>游戏事件</th>
+                            <th>得分</th>
+                            <th>奖金</th>
+                            <th>盈亏</th>
+                            <th>时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <!-- 数据将通过JavaScript动态加载 -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-secondary" onclick="exportToExcel()">导出为Excel</button>
+                <button class="btn btn-primary" onclick="refreshData()">刷新数据</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏历史数据
+        let gameHistory = [];
+        // 入场费（将从服务器获取）
+        let ENTRY_FEE = 20;
+        // 图表实例
+        let profitPieChart, profitLineChart, diceBarChart, scoreDistributionChart;
+
+        // 通知系统
+        function showNotification(message, type = 'info', duration = 3000) {
+            // 先移除所有现有通知
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notification => {
+                if (document.body.contains(notification)) {
+                    document.body.removeChild(notification);
+                }
+            });
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // 显示动画
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            // 自动隐藏
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, duration);
+        }
+
+        // 加载设置
+        async function loadSettings() {
+            try {
+                const response = await fetch('load_settings.php');
+                if (response.ok) {
+                    const settings = await response.json();
+                    if (settings.entry_fee) {
+                        ENTRY_FEE = settings.entry_fee;
+                    }
+                }
+            } catch (error) {
+                console.warn('加载设置失败:', error);
+            }
+        }
+
+        // 加载历史记录
+        async function loadHistory() {
+            try {
+                const response = await fetch('load_history.php');
+                if (response.ok) {
+                    const history = await response.json();
+                    gameHistory = Array.isArray(history) ? history : [];
+                    
+                    // 先初始化所有图表
+                    initCharts();
+                    
+                    // 然后更新所有数据
+                    updateStatCards();
+                    updateHistoryTable();
+                    
+                    if (gameHistory.length > 0) {
+                        showNotification(`已加载${gameHistory.length}条历史记录`, 'success');
+                    } else {
+                        showNotification('暂无历史记录', 'info');
+                    }
+                } else {
+                    throw new Error('加载历史记录失败');
+                }
+            } catch (error) {
+                console.error('加载历史记录失败:', error);
+                showNotification('加载历史记录失败: ' + error.message, 'error');
+            }
+        }
+
+        // 初始化
+        async function init() {
+            await loadSettings(); // 先加载设置
+            await loadHistory();
+            updatePlayerFilter();
+            showNotification('数据统计页面已加载', 'success');
+        }
+
+        // 刷新数据
+        async function refreshData() {
+            await loadHistory();
+            updateStatCards();
+            updateCharts();
+            updateHistoryTable();
+            updatePlayerFilter();
+            showNotification('数据已刷新', 'success');
+        }
+
+        // 更新统计卡片
+        function updateStatCards() {
+            // 总游戏次数
+            const totalGames = gameHistory.length;
+            document.getElementById('totalGames').textContent = totalGames;
+            
+            // 平均得分
+            const totalScore = gameHistory.reduce((sum, game) => sum + game.score, 0);
+            const avgScore = totalGames > 0 ? Math.round((totalScore / totalGames) * 10) / 10 : 0;
+            document.getElementById('avgScore').textContent = avgScore;
+            
+            // 盈利次数（奖金大于入场费）
+            const profitGames = gameHistory.filter(game => game.bonus > ENTRY_FEE).length;
+            const profitPercentage = totalGames > 0 ? Math.round((profitGames / totalGames) * 100) : 0;
+            document.getElementById('profitGames').textContent = profitGames;
+            document.getElementById('profitTrend').textContent = `${profitPercentage}%`;
+            document.getElementById('profitTrend').className = `stat-trend ${profitPercentage >= 50 ? 'trend-up' : 'trend-down'}`;
+            
+            // 总盈亏
+            const totalProfit = gameHistory.reduce((sum, game) => sum + (game.bonus - ENTRY_FEE), 0);
+            document.getElementById('totalProfit').textContent = totalProfit > 0 ? `+${totalProfit}` : totalProfit;
+            document.getElementById('profitValueTrend').className = `stat-trend ${totalProfit >= 0 ? 'trend-up' : 'trend-down'}`;
+            document.getElementById('profitValueTrend').textContent = totalProfit >= 0 ? `+${totalProfit}` : `${totalProfit}`;
+        }
+
+        // 初始化图表
+        function initCharts() {
+            // 盈亏比例饼图
+            const profitPieCtx = document.getElementById('profitPieChart').getContext('2d');
+            profitPieChart = new Chart(profitPieCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['盈利', '亏损'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ['rgba(39, 174, 96, 0.7)', 'rgba(231, 76, 60, 0.7)'],
+                        borderColor: ['rgba(39, 174, 96, 1)', 'rgba(231, 76, 60, 1)'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // 盈亏趋势折线图
+            const profitLineCtx = document.getElementById('profitLineChart').getContext('2d');
+            profitLineChart = new Chart(profitLineCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '盈亏',
+                        data: [],
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+            
+            // 骰子点数分布柱状图
+            const diceBarCtx = document.getElementById('diceBarChart').getContext('2d');
+            diceBarChart = new Chart(diceBarCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['1点', '2点', '3点', '4点', '5点', '6点'],
+                    datasets: [{
+                        label: '次数',
+                        data: [0, 0, 0, 0, 0, 0],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(153, 102, 255, 0.7)',
+                            'rgba(255, 159, 64, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // 得分分布直方图
+            const scoreDistributionCtx = document.getElementById('scoreDistributionChart').getContext('2d');
+            scoreDistributionChart = new Chart(scoreDistributionCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '游戏次数',
+                        data: [],
+                        backgroundColor: 'rgba(102, 126, 234, 0.7)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // 更新图表数据
+            updateCharts();
+        }
+
+        // 更新图表数据
+        function updateCharts() {
+            // 检查图表实例是否存在
+            if (!profitPieChart || !profitLineChart || !diceBarChart || !scoreDistributionChart) {
+                console.warn('图表实例未初始化，跳过更新');
+                return;
+            }
+
+            try {
+                // 盈亏比例饼图
+                const profitGames = gameHistory.filter(game => game.bonus > ENTRY_FEE).length;
+                const lossGames = gameHistory.length - profitGames;
+                
+                profitPieChart.data.datasets[0].data = [profitGames, lossGames];
+                profitPieChart.update();
+                
+                // 盈亏趋势折线图
+                const recentGames = [...gameHistory].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)).slice(-10);
+                
+                profitLineChart.data.labels = recentGames.map(game => {
+                    const date = new Date(game.timestamp);
+                    return `${date.getMonth()+1}/${date.getDate()}`;
+                });
+                
+                profitLineChart.data.datasets[0].data = recentGames.map(game => game.bonus - ENTRY_FEE);
+                profitLineChart.update();
+                
+                // 骰子点数分布柱状图
+                const diceCounts = [0, 0, 0, 0, 0, 0];
+                gameHistory.forEach(game => {
+                    if (game.diceRoll >= 1 && game.diceRoll <= 6) {
+                        diceCounts[game.diceRoll - 1]++;
+                    }
+                });
+                
+                diceBarChart.data.datasets[0].data = diceCounts;
+                diceBarChart.update();
+                
+                // 得分分布直方图
+                const scores = gameHistory.map(game => game.score);
+                const min = Math.min(...scores, 0);
+                const max = Math.max(...scores, 30);
+                
+                // 创建分数区间
+                const binSize = 5;
+                const bins = [];
+                const binCounts = [];
+                
+                for (let i = Math.floor(min / binSize) * binSize; i <= Math.ceil(max / binSize) * binSize; i += binSize) {
+                    bins.push(`${i}-${i + binSize}`);
+                    binCounts.push(0);
+                }
+                
+                // 统计每个区间的游戏次数
+                scores.forEach(score => {
+                    const binIndex = Math.floor((score - min) / binSize);
+                    if (binIndex >= 0 && binIndex < binCounts.length) {
+                        binCounts[binIndex]++;
+                    }
+                });
+                
+                scoreDistributionChart.data.labels = bins;
+                scoreDistributionChart.data.datasets[0].data = binCounts;
+                scoreDistributionChart.update();
+            } catch (error) {
+                console.warn('更新图表时发生错误:', error);
+            }
+        }
+
+        // 更新历史表格
+        function updateHistoryTable(filteredData = null) {
+            const tableBody = document.getElementById('historyTableBody');
+            tableBody.innerHTML = '';
+            
+            const data = filteredData || gameHistory;
+            
+            if (data.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="6" style="text-align: center;">暂无数据</td>`;
+                tableBody.appendChild(row);
+                return;
+            }
+            
+            data.forEach(game => {
+                const row = document.createElement('tr');
+                const profit = game.bonus - ENTRY_FEE;
+                const profitClass = profit >= 0 ? 'profit' : 'loss';
+                const timestamp = new Date(game.timestamp).toLocaleString();
+                
+                row.innerHTML = `
+                    <td>${game.playerName || '未知玩家'}</td>
+                    <td>${game.diceRoll}点 (${getPathDescription(game.diceRoll)})</td>
+                    <td>${game.score}分</td>
+                    <td>$${game.bonus}</td>
+                    <td class="${profitClass}">${profit > 0 ? '+' : ''}$${profit}</td>
+                    <td>${timestamp}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // 获取路径描述
+        function getPathDescription(diceNumber) {
+            const pathDescriptions = {
+                1: '第一行',
+                2: '第二行', 
+                3: '第三行',
+                4: '第一列',
+                5: '第二列',
+                6: '第三列'
+            };
+            
+            return pathDescriptions[diceNumber] || '未知路径';
+        }
+
+        // 更新玩家筛选下拉框
+        function updatePlayerFilter() {
+            const playerFilter = document.getElementById('playerFilter');
+            const players = new Set();
+            
+            // 保存当前选择
+            const currentSelection = playerFilter.value;
+            
+            // 清空选项
+            playerFilter.innerHTML = '<option value="all">全部</option>';
+            
+            // 添加玩家选项
+            gameHistory.forEach(game => {
+                if (game.playerName && !players.has(game.playerName)) {
+                    players.add(game.playerName);
+                    const option = document.createElement('option');
+                    option.value = game.playerName;
+                    option.textContent = game.playerName;
+                    playerFilter.appendChild(option);
+                }
+            });
+            
+            // 恢复选择
+            if (currentSelection !== 'all' && [...players].includes(currentSelection)) {
+                playerFilter.value = currentSelection;
+            }
+        }
+
+        // 应用筛选
+        function applyFilters() {
+            const playerFilter = document.getElementById('playerFilter').value;
+            const profitFilter = document.getElementById('profitFilter').value;
+            const sortFilter = document.getElementById('sortFilter').value;
+            
+            // 筛选数据
+            let filteredData = [...gameHistory];
+            
+            // 玩家筛选
+            if (playerFilter !== 'all') {
+                filteredData = filteredData.filter(game => game.playerName === playerFilter);
+            }
+            
+            // 盈亏筛选
+            if (profitFilter === 'profit') {
+                filteredData = filteredData.filter(game => game.bonus > ENTRY_FEE);
+            } else if (profitFilter === 'loss') {
+                filteredData = filteredData.filter(game => game.bonus <= ENTRY_FEE);
+            }
+            
+            // 排序
+            switch (sortFilter) {
+                case 'time-desc':
+                    filteredData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    break;
+                case 'time-asc':
+                    filteredData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                    break;
+                case 'score-desc':
+                    filteredData.sort((a, b) => b.score - a.score);
+                    break;
+                case 'score-asc':
+                    filteredData.sort((a, b) => a.score - b.score);
+                    break;
+                case 'bonus-desc':
+                    filteredData.sort((a, b) => b.bonus - a.bonus);
+                    break;
+                case 'bonus-asc':
+                    filteredData.sort((a, b) => a.bonus - b.bonus);
+                    break;
+            }
+            
+            // 更新表格
+            updateHistoryTable(filteredData);
+            showNotification('已应用筛选', 'info');
+        }
+
+        // 导出为Excel
+        function exportToExcel() {
+            try {
+                // 获取当前筛选后的数据
+                const playerFilter = document.getElementById('playerFilter').value;
+                const profitFilter = document.getElementById('profitFilter').value;
+                const sortFilter = document.getElementById('sortFilter').value;
+                
+                // 筛选数据
+                let filteredData = [...gameHistory];
+                
+                // 玩家筛选
+                if (playerFilter !== 'all') {
+                    filteredData = filteredData.filter(game => game.playerName === playerFilter);
+                }
+                
+                // 盈亏筛选
+                if (profitFilter === 'profit') {
+                    filteredData = filteredData.filter(game => game.bonus > ENTRY_FEE);
+                } else if (profitFilter === 'loss') {
+                    filteredData = filteredData.filter(game => game.bonus <= ENTRY_FEE);
+                }
+                
+                // 排序
+                switch (sortFilter) {
+                    case 'time-desc':
+                        filteredData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                        break;
+                    case 'time-asc':
+                        filteredData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                        break;
+                    case 'score-desc':
+                        filteredData.sort((a, b) => b.score - a.score);
+                        break;
+                    case 'score-asc':
+                        filteredData.sort((a, b) => a.score - b.score);
+                        break;
+                    case 'bonus-desc':
+                        filteredData.sort((a, b) => b.bonus - a.bonus);
+                        break;
+                    case 'bonus-asc':
+                        filteredData.sort((a, b) => a.bonus - b.bonus);
+                        break;
+                }
+                
+                // 准备Excel数据
+                const excelData = [
+                    ['玩家名称', '游戏事件', '得分', '奖金', '盈亏', '时间'] // 表头
+                ];
+                
+                filteredData.forEach(game => {
+                    const profit = game.bonus - ENTRY_FEE;
+                    const timestamp = new Date(game.timestamp).toLocaleString();
+                    
+                    excelData.push([
+                        game.playerName || '未知玩家',
+                        `${game.diceRoll}点 (${getPathDescription(game.diceRoll)})`,
+                        game.score,
+                        `$${game.bonus}`,
+                        profit,
+                        timestamp
+                    ]);
+                });
+                
+                // 创建工作表
+                const ws = XLSX.utils.aoa_to_sheet(excelData);
+                
+                // 创建工作簿
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, '游戏历史记录');
+                
+                // 导出Excel文件
+                XLSX.writeFile(wb, `游戏历史记录_${new Date().toISOString().slice(0, 10)}.xlsx`);
+                
+                showNotification('已导出Excel文件', 'success');
+            } catch (error) {
+                console.error('导出Excel失败:', error);
+                showNotification('导出Excel失败: ' + error.message, 'error');
+            }
+        }
+
+        // 初始化得分分布图表
+        function initScoreDistributionChart() {
+            const ctx = document.getElementById('scoreDistributionChart').getContext('2d');
+            
+            // 计算得分分布
+            const scoreRanges = {
+                '0-10': 0,
+                '11-20': 0,
+                '21-40': 0,
+                '41-50': 0,
+                '51-70': 0,
+                '71+': 0
+            };
+
+            gameHistory.forEach(game => {
+                const score = game.score;
+                if (score <= 10) scoreRanges['0-10']++;
+                else if (score <= 20) scoreRanges['11-20']++;
+                else if (score <= 40) scoreRanges['21-40']++;
+                else if (score <= 50) scoreRanges['41-50']++;
+                else if (score <= 70) scoreRanges['51-70']++;
+                else scoreRanges['71+']++;
+            });
+
+            // 创建图表
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(scoreRanges),
+                    datasets: [{
+                        label: '游戏次数',
+                        data: Object.values(scoreRanges),
+                        backgroundColor: [
+                            'rgba(102, 126, 234, 0.8)',
+                            'rgba(39, 174, 96, 0.8)',
+                            'rgba(243, 156, 18, 0.8)',
+                            'rgba(231, 76, 60, 0.8)',
+                            'rgba(155, 89, 182, 0.8)',
+                            'rgba(52, 152, 219, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(102, 126, 234, 1)',
+                            'rgba(39, 174, 96, 1)',
+                            'rgba(243, 156, 18, 1)',
+                            'rgba(231, 76, 60, 1)',
+                            'rgba(155, 89, 182, 1)',
+                            'rgba(52, 152, 219, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y', // 将图表改为水平方向
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '游戏次数',
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '得分区间',
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false // 隐藏图例
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = gameHistory.length;
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${value} 次 (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
