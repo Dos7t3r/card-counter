@@ -3,6 +3,7 @@
 一个基于 Web 的抽卡游戏记录系统，支持游戏数据记录、统计分析和可视化展示。
 <img width="1298" alt="WechatIMG880" src="https://github.com/user-attachments/assets/d3c88d7c-3cad-4242-ad8d-801f3ae80e8e" />
 <img width="1307" alt="WechatIMG881" src="https://github.com/user-attachments/assets/b6ebb116-6e1e-4ddf-a2fd-c0006d964ab3" />
+↑↑↑此BUG已修复↑↑↑
 <img width="978" alt="WechatIMG883" src="https://github.com/user-attachments/assets/beebe8fc-9f07-47ac-89fd-37d6e54911f5" />
 <img width="901" alt="WechatIMG884" src="https://github.com/user-attachments/assets/81c413e4-f4bd-46e2-8abb-6a11619f0daa" />
 <img width="1203" alt="WechatIMG885" src="https://github.com/user-attachments/assets/9caa71cb-ca13-4806-b76f-0a2fcadb896b" />
