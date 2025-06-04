@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>抽卡游戏记录系统</title>
+    <title>抽卡游戏记录系统v4</title>
     <style>
         * {
             margin: 0;
@@ -1322,13 +1322,20 @@
             };
             
             pathDesc.textContent = `计算路径: ${pathDescriptions[diceNumber]}`;
-            scoringDesc.innerHTML = `
-                计分规则: 红牌${scoringRules.red_card > 0 ? '+' : ''}${scoringRules.red_card}分, 
-                黑牌${scoringRules.black_card > 0 ? '+' : ''}${scoringRules.black_card}分, 
-                红A${scoringRules.red_ace > 0 ? '+' : ''}${scoringRules.red_ace}分, 
-                黑A${scoringRules.black_ace > 0 ? '+' : ''}${scoringRules.black_ace}分, 
-                JQK${scoringRules.face_card > 0 ? '+' : ''}${scoringRules.face_card}分
-            `;
+            // scoringDesc.innerHTML = `
+            //     计分规则: 红牌${scoringRules.red_card > 0 ? '+' : ''}${scoringRules.red_card}分, 
+            //     黑牌${scoringRules.black_card > 0 ? '+' : ''}${scoringRules.black_card}分, 
+            //     红A${scoringRules.red_ace > 0 ? '+' : ''}${scoringRules.red_ace}分, 
+            //     黑A${scoringRules.black_ace > 0 ? '+' : ''}${scoringRules.black_ace}分, 
+            //     JQK${scoringRules.face_card > 0 ? '+' : ''}${scoringRules.face_card}分
+            // `;
+
+            // 更新为显示按分数区间设置的奖金规则
+            let bonusRulesHtml = '计分规则:\n';
+            for (const range in scoringRules.bonus_rules) {
+                bonusRulesHtml += `${range}分奖金: $${scoringRules.bonus_rules[range]}\n`;
+            }
+            scoringDesc.textContent = bonusRulesHtml;
             
             highlightPath(diceNumber);
         }
@@ -1656,17 +1663,17 @@
             // 计算奖金
             let bonus = 0;
             if (score <= 10) {
-                bonus = 0;  // 0-10分无奖金
+                bonus = scoringRules.bonus_rules['0-10'];
             } else if (score <= 20) {
-                bonus = 5;  // 11-20分奖励$5
+                bonus = scoringRules.bonus_rules['11-20'];
             } else if (score <= 40) {
-                bonus = 20; // 21-40分奖励$20
+                bonus = scoringRules.bonus_rules['21-40'];
             } else if (score <= 50) {
-                bonus = 50; // 41-50分奖励$50
+                bonus = scoringRules.bonus_rules['41-50'];
             } else if (score <= 70) {
-                bonus = 100; // 51-70分奖励$100
+                bonus = scoringRules.bonus_rules['51-70'];
             } else {
-                bonus = 200; // 71分以上奖励$200
+                bonus = scoringRules.bonus_rules['71+'];
             }
             
             gameData.bonus = bonus;
